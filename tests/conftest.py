@@ -16,7 +16,9 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(SERVICE_DIR))
 
 _db = Path(tempfile.mkdtemp()) / "auth-test.db"
-os.environ["DATABASE_URL"] = f"sqlite:///{_db}"
+os.environ["DB_URL"] = f"sqlite:///{_db}"
+for _name in ("DB_USERNAME", "DB_PASSWORD"):  # SQLite 는 계정을 쓰지 않는다 (밖의 값이 섞이지 않게)
+    os.environ.pop(_name, None)
 os.environ["JWT_SECRET"] = secrets.token_urlsafe(48)
 os.environ["BCRYPT_ROUNDS"] = "4"  # 테스트 속도용 (운영 12)
 os.environ.pop("READ_ONLY_MODE", None)
