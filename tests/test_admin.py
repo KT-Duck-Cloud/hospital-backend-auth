@@ -225,3 +225,27 @@ def test_audit_logs_cannot_be_changed(admin_client):
     for method in ("post", "put", "patch", "delete"):
         assert getattr(c, method)(AUDIT, headers=admin).status_code == 405
         assert getattr(c, method)(f"{AUDIT}/1", headers=admin).status_code == 404
+
+
+def test_admin_user_list_masks_work_phone(admin_client, db_session):
+    """직원 업무용 연락처(users.work_phone): A3~A5 는 ADMIN·DIRECTOR·TESTER 만 부르며 전부 010-****-1234 모양으로 가린다."""
+    c = admin_client
+    nurse = db_session.scalar(select(User).where(User.login_id == "nurse_im01"))
+    nurse.work_phone = "010-1234-5678"
+    db_session.commit()
+    full = "010-1234-5678"
+
+    for login_id in ("admin01", "director01", "tester01"):
+        page = c.get(USERS, headers=h(c, login_id)).json()
+        by_login = {u["login_id"]: u["work_phone"] for u in page["items"]}
+        assert by_login["nurse_im01"] == "010-****-5678"
+        assert by_login["office01"] is None            # 번호가 없으면 null
+        assert full not in str(page)
+
+    headers = h(c, "admin01")
+    target = nurse.id
+    r = c.patch(f"{USERS}/{target}", json={"is_active": False}, headers=headers)
+    assert r.status_code == 200 and r.json()["work_phone"] == "010-****-5678" and full not in r.text
+    r = c.post(USERS, headers=headers, json={"login_id": "new_nurse", "name": "새간호사", "role": "NURSE",
+                                             "department_id": 1, "password": "Another-Pass-1234"})
+    assert r.status_code == 201 and r.json()["work_phone"] is None

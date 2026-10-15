@@ -2,8 +2,9 @@
 from datetime import date
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
+from shared.phone import mask_phone
 from shared.timeutil import UtcDateTime
 
 LoginId = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=50)]
@@ -97,11 +98,18 @@ class AdminUserOut(BaseModel):
     role: str
     department_id: int | None
     patient_id: int | None
+    work_phone: str | None = None   # 직원 업무용 연락처. 항상 가린 값 (shared/phone.py)
     is_active: bool
     locked_until: UtcDateTime | None
     last_login_at: UtcDateTime | None
     created_at: UtcDateTime
     updated_at: UtcDateTime
+
+
+    @field_validator("work_phone")
+    @classmethod
+    def _mask_work_phone(cls, v: str | None) -> str | None:
+        return mask_phone(v)
 
 
 class AdminUserPage(BaseModel):
