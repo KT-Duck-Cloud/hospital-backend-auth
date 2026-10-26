@@ -185,4 +185,4 @@ def list_audit_logs(
         .offset((filters.page - 1) * filters.size).limit(filters.size)
     ).all()
     audit.write_audit(request, "AUDIT_LOG_VIEW", audit.SUCCESS, user_id=actor.id)
-    return {"items": items, "page": filters.page, "size": filters.size, "total": total}
+    return {"items": items, "page": filters.page, "size": filters.size, "total": total} 
