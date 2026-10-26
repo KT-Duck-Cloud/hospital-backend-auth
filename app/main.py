@@ -171,5 +171,5 @@ def logout(request: Request, user: CurrentUser = Depends(get_current_user), db: 
     return schemas.LogoutOut()
 
 
-app.include_router(api)
-app.include_router(admin.router)  # A3~A6 관리 API
+app.include_router(api) 
+app.include_router(admin.router)  # A3~A6 관리 API 
